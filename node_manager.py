@@ -13,6 +13,9 @@ def add_node(neighbors):
 
     [nodes[neighbor].add_neighbor(last_id) for neighbor in neighbors]
 
+    [node.add_state(last_id) for node in nodes.values()]
+
+    nodes[last_id] = 0
     node = Node(last_id, neighbors)
     nodes[last_id] = node
     node.start()
@@ -24,6 +27,7 @@ def remove_node(id):
         print("No such node")
         return
     [node.remove_neighbor(id) for node in nodes.values() if id in node.neighbors]
+    [node.remove_state(id) for node in nodes.values()]
     nodes[id].stop_node()
     del nodes[id]
 
