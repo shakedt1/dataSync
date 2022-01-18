@@ -1,40 +1,45 @@
 from node import Node
 
 nodes = dict()
-last_id = 0
+last_node_id = 0
 
 
 def add_node(neighbors):
-    global last_id
+    global last_node_id
 
     if not set(neighbors).issubset(nodes.keys()):
         print("No such neighbors")
         return
 
-    [nodes[neighbor].add_neighbor(last_id) for neighbor in neighbors]
+    [nodes[neighbor].add_neighbor(last_node_id) for neighbor in neighbors]
 
-    [node.add_state(last_id) for node in nodes.values()]
+    [node.add_state(last_node_id) for node in nodes.values()]
 
-    nodes[last_id] = 0
-    node = Node(last_id, neighbors)
-    nodes[last_id] = node
+    nodes[last_node_id] = 0
+    node = Node(last_node_id, neighbors)
+    nodes[last_node_id] = node
     node.start()
-    last_id += 1
+    last_node_id += 1
 
 
-def remove_node(id):
-    if id not in nodes:
+def remove_node(node_id):
+    if node_id not in nodes:
         print("No such node")
         return
-    [node.remove_neighbor(id) for node in nodes.values() if id in node.neighbors]
-    [node.remove_state(id) for node in nodes.values()]
-    nodes[id].stop_node()
-    del nodes[id]
+
+    [node.remove_neighbor(node_id) for node in nodes.values() if node_id in node.neighbors]
+    [node.remove_state(node_id) for node in nodes.values()]
+
+    nodes[node_id].stop_node()
+    del nodes[node_id]
 
 
-def send(id):
-    pass
+def send(node_id, data, event):
+    if not nodes[node_id].is_syncing() or not event:
+        nodes[node_id].add_to_buffer(data)
+        nodes[node_id].set_event(event)
 
 
-def multy_send(ids):
-    pass
+def multy_send(node_ids, data, event):
+    [send(node_id, data, event) for node_id in node_ids]
+
