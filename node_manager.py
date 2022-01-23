@@ -34,10 +34,16 @@ def remove_node(node_id):
     del nodes[node_id]
 
 
+def publish(node_ids, data):
+    for node_id in node_ids:
+        if not nodes[node_id].is_syncing():
+            nodes[node_id].add_to_buffer(data)
+            nodes[node_id].set_event(0)
+
+
 def send(node_id, data, event):
-    if not nodes[node_id].is_syncing() or not event:
-        nodes[node_id].add_to_buffer(data)
-        nodes[node_id].set_event(event)
+    nodes[node_id].add_to_buffer(data)
+    nodes[node_id].set_event(event)
 
 
 def multy_send(node_ids, data, event):

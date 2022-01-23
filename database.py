@@ -4,11 +4,11 @@ class Database:
     def __init__(self):
         self.data = dict()
 
-    def get_data(self, start_index, end_index):
-        pass
+    def get_data(self, node_id, start_index, end_index):
+        return self.data[node_id][start_index:end_index]
 
-    def add_data(self, id, data):
-        self.data.setdefault(id, []).append(data)
+    def add_data(self, node_id, data):
+        self.data.setdefault(node_id, []).append(data)
 
-    def sync_data(self, data):
-        pass
+    def sync_data(self, node_id, data):
+        self.data.setdefault(node_id, []).extend(data)
