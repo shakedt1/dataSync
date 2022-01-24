@@ -14,12 +14,15 @@ if __name__ == "__main__":
     # node_manager.add_node([4])
     node_manager.nodes[0].add_to_database("hello")
     node_manager.nodes[1].add_to_database("hello")
-    node_manager.nodes[1].add_to_database("hello")
+    node_manager.nodes[1].add_to_database("yello")
     # node_manager.nodes[2].add_to_database("hello")
-    node_manager.nodes[0].add_to_database("hello")
+    node_manager.nodes[0].add_to_database("yello")
     node_manager.nodes[3].add_to_database("hello")
     # sleep()
-
+    while True:
+        inp = int(float(input()))
+        if 0 <= inp <= 3:
+            node_manager.nodes[inp].add_to_database("hello")
     # G = nx.Graph()
     # edges = list()
     # for id, node in node_manager.nodes.items():
