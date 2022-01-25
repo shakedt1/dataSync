@@ -22,7 +22,16 @@ if __name__ == "__main__":
     while True:
         inp = input()
         if inp:
-            if 0 <= int(inp) <= 3:
+            if inp == 'r':
+                r_inp = input()
+                if r_inp:
+                    if int(r_inp) in node_manager.nodes:
+                        node_manager.remove_node(int(r_inp))
+            elif inp == 'a':
+                a_inp = input()
+                if a_inp:
+                    node_manager.add_node(list(map(int, list(a_inp))))
+            elif int(inp) in node_manager.nodes:
                 node_manager.nodes[int(inp)].add_to_database(inp + "ello")
     # G = nx.Graph()
     # edges = list()

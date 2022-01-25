@@ -140,13 +140,14 @@ class Node(Thread):
                         self.send_sync_complete(manager_id)
                         self.buffer = ""
 
-                        self.events[3].wait()
-                        synchronized_nodes = list(map(int, self.buffer.split(',')))
-                        print("synced:" + str(synchronized_nodes))
-                        self.current_neighbors = list(set(self.neighbors) - set(synchronized_nodes))
-                        sync = bool(self.current_neighbors)
-                        [event.clear() for event in self.events[1:]]
-                        self.buffer = ""
+                        self.events[3].wait(timeout=4)
+                        if self.events[3].is_set():
+                            synchronized_nodes = list(map(int, self.buffer.split(',')))
+                            print("synced:" + str(synchronized_nodes))
+                            self.current_neighbors = list(set(self.neighbors) - set(synchronized_nodes))
+                            sync = bool(self.current_neighbors)
+                            [event.clear() for event in self.events[1:]]
+                            self.buffer = ""
             else:
                 sync = True
 
@@ -173,9 +174,10 @@ class Node(Thread):
                         self.publish_data_to_neighbors(lowest_states)
                         self.buffer = ""
 
-                        self.events[3].wait()
-                        sleep(1)
-                        self.publish_synchronized_nodes()
+                        self.events[3].wait(timeout=4)
+                        if self.events[3].is_set():
+                            sleep(1)
+                            self.publish_synchronized_nodes()
 
             self.buffer = ""
             self.timeout = random.randint(5, 10)
