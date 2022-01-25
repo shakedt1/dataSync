@@ -87,7 +87,7 @@ class Node(Thread):
             for data_id in data_dict:
                 self.log_state[int(data_id)] += len(data_dict[data_id])
                 self.database.sync_data(int(data_id), data_dict[data_id])
-        print("id: {} new log_state {}".format(self.node_id, self.log_state))
+
 
     def publish_data_to_neighbors(self, lowest_states):
         db_data = dict()
@@ -128,13 +128,13 @@ class Node(Thread):
                 manager_id = self.send_log_diffs()
                 self.buffer = ""
 
-                self.events[1].wait(timeout=4)
+                self.events[1].wait(timeout=2)
                 if self.events[1].is_set():
                     if self.buffer:
                         self.send_data_reply(manager_id)
                     self.buffer = ""
 
-                    self.events[2].wait(timeout=4)
+                    self.events[2].wait(timeout=2)
                     if self.events[2].is_set():
                         self.sync_all_data()
                         self.send_sync_complete(manager_id)
@@ -162,12 +162,13 @@ class Node(Thread):
                     if len(self.current_neighbors) != 0:
                         self.buffer = ""
                         if has_requests:
-                            self.events[2].wait(timeout=4)
+                            self.events[2].wait(timeout=2)
                             if self.events[2].is_set():
                                 sleep(1)
                                 self.sync_data()
                         else:
-                            sleep(2)
+                            sleep(1)
+                        print("id: {} new log_state {}".format(self.node_id, self.log_state))
 
                         self.publish_data_to_neighbors(lowest_states)
                         self.buffer = ""
@@ -190,8 +191,10 @@ class Node(Thread):
         self.neighbors.remove(neighbor)
 
     def add_to_database(self, data):
-        self.database.add_data(self.node_id, data)
-        self.log_state[self.node_id] += 1
+        if not self.is_syncing():
+            self.database.add_data(self.node_id, data)
+            self.log_state[self.node_id] += 1
+            print(data + " added to " + str(self.node_id))
 
     def add_state(self, neighbor):
         self.log_state[neighbor] = 0

@@ -20,9 +20,10 @@ if __name__ == "__main__":
     node_manager.nodes[3].add_to_database("hello")
     # sleep()
     while True:
-        inp = int(float(input()))
-        if 0 <= inp <= 3:
-            node_manager.nodes[inp].add_to_database("hello")
+        inp = input()
+        if inp:
+            if 0 <= int(inp) <= 3:
+                node_manager.nodes[int(inp)].add_to_database(inp + "ello")
     # G = nx.Graph()
     # edges = list()
     # for id, node in node_manager.nodes.items():
