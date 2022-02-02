@@ -8,7 +8,4 @@ class Database:
         return self.data[node_id][start_index:end_index]
 
     def add_data(self, node_id, data):
-        self.data.setdefault(node_id, []).append(data)
-
-    def sync_data(self, node_id, data):
         self.data.setdefault(node_id, []).extend(data)

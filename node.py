@@ -22,6 +22,7 @@ class Node(Thread):
         self.stop = False
         self.events = [threading.Event() for _ in range(4)]
         self.timeout = random.randint(3, 10)
+        self.data_to_add = []
 
     def publish_log_to_neighbors(self):
         node_manager.publish(self.current_neighbors, self.build_msg(self.log_state))
@@ -86,14 +87,14 @@ class Node(Thread):
         for data_dict in eval_buffer:
             for data_id in data_dict:
                 self.log_state[int(data_id)] += len(data_dict[data_id])
-                self.database.sync_data(int(data_id), data_dict[data_id])
-
+                self.database.add_data(int(data_id), data_dict[data_id])
 
     def publish_data_to_neighbors(self, lowest_states):
         db_data = dict()
         for state in self.log_state:
-            if self.log_state[state] > lowest_states[state]:
-                db_data[state] = (self.log_state[state], self.database.get_data(state, lowest_states[state], self.log_state[state]))
+            if state in lowest_states:
+                if self.log_state[state] > lowest_states[state]:
+                    db_data[state] = (self.log_state[state], self.database.get_data(state, lowest_states[state], self.log_state[state]))
         node_manager.multy_send(self.current_neighbors, json.dumps(db_data), 2)
         # print("id: {} publish data to neighbors {} to {}".format(self.node_id, json.dumps(db_data), self.current_neighbors))
 
@@ -104,9 +105,9 @@ class Node(Thread):
             missing_length = data_dict[data_id][0] - self.log_state[int(data_id)]
             if missing_length != 0:
                 self.log_state[int(data_id)] += missing_length
-                self.database.sync_data(int(data_id), data_dict[data_id][1][-missing_length:])
+                print("length", missing_length)
+                self.database.add_data(int(data_id), data_dict[data_id][1][-missing_length:])
         print("id: {} new log_state: {}".format(self.node_id, self.log_state))
-
 
     def send_sync_complete(self, manager_id):
         node_manager.send(manager_id, str(self.node_id) + ",", 3)
@@ -119,8 +120,8 @@ class Node(Thread):
     def run(self):
         print("id: {} neighbors: {} log_state: {}".format(self.node_id, self.neighbors, self.log_state))
         while not self.stop:
+            self.add_all_data()
             self.current_neighbors = self.neighbors
-            sync = False
             self.events[0].wait(timeout=self.timeout)
             [event.clear() for event in self.events[1:]]
 
@@ -145,13 +146,10 @@ class Node(Thread):
                             synchronized_nodes = list(map(int, self.buffer.split(',')))
                             print("synced:" + str(synchronized_nodes))
                             self.current_neighbors = list(set(self.neighbors) - set(synchronized_nodes))
-                            sync = bool(self.current_neighbors)
                             [event.clear() for event in self.events[1:]]
                             self.buffer = ""
-            else:
-                sync = True
 
-            if sync:
+            if bool(self.current_neighbors):
                 self.events[0].set()
                 self.publish_log_to_neighbors()
 
@@ -193,10 +191,12 @@ class Node(Thread):
         self.neighbors.remove(neighbor)
 
     def add_to_database(self, data):
-        if not self.is_syncing():
-            self.database.add_data(self.node_id, data)
-            self.log_state[self.node_id] += 1
-            print(data + " added to " + str(self.node_id))
+        self.data_to_add.append(data)
+
+    def add_all_data(self):
+        self.database.add_data(self.node_id, self.data_to_add)
+        self.log_state[self.node_id] += len(self.data_to_add)
+        self.data_to_add.clear()
 
     def add_state(self, neighbor):
         self.log_state[neighbor] = 0
