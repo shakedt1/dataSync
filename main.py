@@ -1,5 +1,4 @@
 from time import sleep
-import graphviz
 import dash_interactive_graphviz
 import dash
 import networkx as nx
@@ -7,7 +6,6 @@ from dash import html
 from dash import dcc
 from dash.dependencies import Input, Output, State
 import node_manager
-from threading import Thread
 
 app = dash.Dash(__name__)
 
@@ -71,11 +69,11 @@ def manage_nodes(_, __, node_neighbors, node_id):
               State("data_to_add", "value"))
 def manage_node(selected_node, _, data):
     button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-    if selected_node is None:
-        selected_node = 0
-    if button_id == "add_data_btn":
-        node_manager.nodes[int(selected_node)].add_to_database(data)
-    return html.Div(selected_node), str(node_manager.nodes[int(selected_node)].database.data)
+    if selected_node is not None:
+        if button_id == "add_data_btn":
+            node_manager.nodes[int(selected_node)].add_to_database(data)
+        return html.Div(selected_node), str(node_manager.nodes[int(selected_node)].database.data)
+    return None, None
 
 
 if __name__ == "__main__":
@@ -108,3 +106,5 @@ if __name__ == "__main__":
     #                 node_manager.add_node(list(map(int, list(a_inp))))
     #         elif int(inp) in node_manager.nodes:
     #             node_manager.nodes[int(inp)].add_to_database(inp + "ello")
+
+

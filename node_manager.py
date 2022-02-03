@@ -38,13 +38,8 @@ def remove_node(node_id, dot):
     [node.remove_state(node_id) for node in nodes.values()]
 
     nodes[node_id].stop_node()
-    print(nx.drawing.nx_pydot.to_pydot(dot))
-
     dot.remove_node(str(node_id))
-    print(nx.drawing.nx_pydot.to_pydot(dot))
-
     del nodes[node_id]
-
 
 
 def publish(node_ids, data):
