@@ -1,4 +1,3 @@
-from time import sleep
 import dash_interactive_graphviz
 import dash
 import networkx as nx
@@ -19,27 +18,29 @@ app.layout = html.Div(
         ),
         html.Div(
             [
-                html.H3("selected node id"),
+                html.H3("selected node id:"),
                 html.Div(id="node_id"),
-                html.H3("enter data to add"),
-                dcc.Textarea(
-                    id="data_to_add",
-                    style=dict(height=20, position="relative")
-                ),
-                html.Button("add_data", id="add_data_btn"),
-                html.H3("selected node database"),
+                html.H3("log_state:"),
+                html.Div(id="log_state"),
+                html.H3("Database:"),
                 dcc.Textarea(
                     id="database",
                     style=dict(flexGrow=0.5, position="relative")
                 ),
-                html.Button("remove_node", id="remove_btn", n_clicks=0, style={"margin-bottom": "15px"}),
+                html.H3("enter data to add:"),
+                dcc.Textarea(
+                    id="data_to_add",
+                    style=dict(height=20, position="relative")
+                ),
+                html.Button("add_data", id="add_data_btn", style={"margin-bottom": "15px"}),
                 html.H3("node to add:", style={"margin-bottom": "1px"}),
-                html.H3("enter node neighbors ex. (1, 2, 3)"),
+                html.H3("enter node neighbors ex. (0, 1, 2)"),
                 dcc.Textarea(
                     id="node_neighbors",
                     style=dict(height=20, position="relative")
                 ),
-                html.Button("add_node", id="add_btn", n_clicks=0, style={"margin-bottom": "15px"}),
+                html.Button("add_node", id="add_btn", n_clicks=0, style={"margin-bottom": "30px"}),
+                html.Button("remove_node", id="remove_btn", n_clicks=0, style={"margin-bottom": "15px"}),
             ],
             style=dict(display="flex", flexDirection="column"),
         ),
@@ -64,16 +65,21 @@ def manage_nodes(_, __, node_neighbors, node_id):
     return str(nx.drawing.nx_pydot.to_pydot(dot))
 
 
-@app.callback(Output("node_id", "children"), Output("database", "value"),
+@app.callback(Output("node_id", "children"), Output("database", "value"), Output("log_state", "children"),
+              Output("gv", "selected_node"),
               Input("gv", "selected_node"), Input("add_data_btn", "n_clicks"),
-              State("data_to_add", "value"))
-def manage_node(selected_node, _, data):
-    button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-    if selected_node is not None:
-        if button_id == "add_data_btn":
-            node_manager.nodes[int(selected_node)].add_to_database(data)
-        return html.Div(selected_node), str(node_manager.nodes[int(selected_node)].database.data)
-    return None, None
+              State("data_to_add", "value"), State("node_id", "children"))
+def manage_node(selected_node, _, data, node_id):
+    if selected_node is None:
+        raise dash.exceptions.PreventUpdate
+
+    if selected_node == -1:
+        node_id = node_id["props"]["children"]
+        node_manager.nodes[int(node_id)].add_to_database(data)
+        selected_node = node_id
+
+    return html.Div(selected_node), str(node_manager.nodes[int(selected_node)].database.data), \
+        html.Div(str(node_manager.nodes[int(selected_node)].log_state)), -1
 
 
 if __name__ == "__main__":
@@ -106,5 +112,4 @@ if __name__ == "__main__":
     #                 node_manager.add_node(list(map(int, list(a_inp))))
     #         elif int(inp) in node_manager.nodes:
     #             node_manager.nodes[int(inp)].add_to_database(inp + "ello")
-
 
