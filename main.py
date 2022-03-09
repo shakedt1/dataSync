@@ -20,25 +20,37 @@ app.layout = html.Div(
             [
                 html.H3("selected node id:"),
                 html.Div(id="node_id"),
+
                 html.H3("log_state:"),
                 html.Div(id="log_state"),
+
                 html.H3("Database:"),
                 dcc.Textarea(
                     id="database",
                     style=dict(flexGrow=0.5, position="relative")
                 ),
+
                 html.H3("enter data to add:"),
                 dcc.Textarea(
                     id="data_to_add",
                     style=dict(height=20, position="relative")
                 ),
                 html.Button("add_data", id="add_data_btn", style={"margin-bottom": "15px"}),
+
+                html.H3("enter new neighbors:"),
+                dcc.Textarea(
+                    id="new_neighbors",
+                    style=dict(height=20, position="relative")
+                ),
+                html.Button("change_neighbors", id="change_neighbors_btn", style={"margin-bottom": "15px"}),
+
                 html.H3("node to add:", style={"margin-bottom": "1px"}),
                 html.H3("enter node neighbors ex. (0, 1, 2)"),
                 dcc.Textarea(
                     id="node_neighbors",
                     style=dict(height=20, position="relative")
                 ),
+
                 html.Button("add_node", id="add_btn", n_clicks=0, style={"margin-bottom": "30px"}),
                 html.Button("remove_node", id="remove_btn", n_clicks=0, style={"margin-bottom": "15px"}),
             ],
@@ -50,9 +62,9 @@ app.layout = html.Div(
 
 
 @app.callback(Output("gv", "dot_source"),
-              Input("add_btn", "n_clicks"), Input("remove_btn", "n_clicks"),
-              State("node_neighbors", "value"), State("node_id", "children"))
-def manage_nodes(_, __, node_neighbors, node_id):
+              Input("add_btn", "n_clicks"), Input("remove_btn", "n_clicks"), Input("change_neighbors_btn", "n_clicks"),
+              State("node_neighbors", "value"), State("node_id", "children"), State("new_neighbors", "value"))
+def manage_nodes(_, __, ___, node_neighbors, node_id, new_neighbors):
     button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
     if button_id == "remove_btn":
         if node_id:
@@ -62,6 +74,13 @@ def manage_nodes(_, __, node_neighbors, node_id):
             node_manager.add_node(list(map(int, node_neighbors.split(","))), dot)
         else:
             node_manager.add_node([], dot)
+    elif button_id == "change_neighbors_btn":
+        if node_id:
+            if new_neighbors:
+                node_manager.change_neighbors(int(node_id["props"]["children"]), list(map(int, new_neighbors.split(","))), dot)
+            else:
+                node_manager.change_neighbors(int(node_id["props"]["children"]), list(), dot)
+
     return str(nx.drawing.nx_pydot.to_pydot(dot))
 
 

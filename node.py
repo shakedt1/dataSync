@@ -18,7 +18,6 @@ class Node(Thread):
         self.database = Database()
         self.log_state = dict((node, 0) for node in node_manager.nodes.keys())
         self.buffer = str()
-        # self.daemon = True
         self.stop = False
         self.events = [threading.Event() for _ in range(4)]
         self.timeout = random.randint(3, 10)
@@ -31,9 +30,10 @@ class Node(Thread):
     def send_log_diffs(self):
         eval_buffer = ast.literal_eval(self.buffer[:-1])
         manager_id = eval_buffer[0]
-        # print("id: {} received publish {} from {}".format(self.node_id, eval_buffer[1], eval_buffer[0]))
+
         diff = {id: self.log_state[id] for id in self.log_state if self.log_state[id] != eval_buffer[1][str(id)]}
         node_manager.send(manager_id, self.build_msg(diff), 1)
+
         # print("id: {} send log diffs {} to {}".format(self.node_id, self.build_msg(diff), manager_id))
         return manager_id
 
@@ -94,7 +94,8 @@ class Node(Thread):
         for state in self.log_state:
             if state in lowest_states:
                 if self.log_state[state] > lowest_states[state]:
-                    db_data[state] = (self.log_state[state], self.database.get_data(state, lowest_states[state], self.log_state[state]))
+                    db_data[state] = (self.log_state[state], self.database.get_data(state, lowest_states[state],
+                                                                                    self.log_state[state]))
         node_manager.multy_send(self.current_neighbors, json.dumps(db_data), 2)
         # print("id: {} publish data to neighbors {} to {}".format(self.node_id, json.dumps(db_data), self.current_neighbors))
 
@@ -118,9 +119,11 @@ class Node(Thread):
         # print("id: {} send synchronized_nodes {} to {}".format(self.node_id, self.buffer + str(self.node_id), self.current_neighbors))
 
     def run(self):
+
         print("id: {} neighbors: {} log_state: {}".format(self.node_id, self.neighbors, self.log_state))
         while not self.stop:
             self.add_all_data()
+
             self.current_neighbors = self.neighbors
             self.events[0].wait(timeout=self.timeout)
             [event.clear() for event in self.events[1:]]
